@@ -1,0 +1,91 @@
+# General Training Parameters
+device: "cuda:0"
+runs_dir: # path to directory where training runs and checkpoints will be saved 
+seed: 42
+epochs: 200
+batch_size: 128
+lr: 0.001
+termination_lr: 0.00001
+train_ratio: 0.85
+val_ratio: 0.075
+test_ratio: 0.075
+num_workers: 4
+
+# Scheduler Parameters
+use_amp: True # Use automatic mixed precision
+scheduler_type: "ReduceLROnPlateau"
+lr_patience: 2 # For ReduceLROnPlateau
+reduce_lr_factor: 0.1 # Factor by which the learning rate will be reduced in case of a plateau
+dropout: 0.0 # Dropout rate for the model
+
+# Data Parameters
+data_path:  # path to the pre-generated semi-analytical dataset (CSV) 
+
+seq_len: 8
+w_len: 5
+s_len: 3
+feature_dim: 1
+output_dim: 1
+frequency_bins: 1 
+channels: 3 # number of output channels (e.g., phase sin, phase cos, magnitude) per frequency bin
+
+# W Parameter Range Configuration
+min_w_value: 0.0
+max_w_value: 80.0
+w_interval: 1.0
+pad_vocab_size_multiple: 1 # Pad vocab size to be a multiple of this value, 8 is recommended but requires adjustment
+
+# Model Parameters
+d_model: 256 # Mamba hidden layer size
+d_intermediate: 512 # MLP hidden layer size
+nlayers: 6 # Number of Mamba layers
+
+# SSM Configuration
+ssm_cfg:
+  layer: "Mamba2"
+  d_state: 64
+
+# Attention Configuration
+attn_layer_idx: []
+attn_cfg:
+  num_heads: 8
+  d_conv: 4
+  causal: True
+
+# Addtional Configuration
+rms_norm: True
+fused_add_norm: True
+residual_in_fp32: True
+
+# Weights Initializer Configuration
+initializer_cfg:
+  initializer_range: 0.02
+  rescale_prenorm_residual: True
+
+# inverse additional stopping criteria
+early_stopping_metric: s_mae
+early_stopping_patience: 5
+
+# Fine-tune Configuration
+fine_tune_mode: "full"          # 'heads' or 'full'
+ft_epochs: 100                  # epochs for current fine-tune phase
+head_lr: 0.0005                 # learning rate for decoder heads, #0.003 is recommended in heads mode
+backbone_lr: 0.0001             # used in full mode
+alpha_weighted_val: 0.7         # weight for high-fid validation in weighted metric
+rehearsal_lambda: 0.2           # weight of low-fid loss when mixed
+rehearsal_interval: 2           # include one low-fid batch every N high-fid batches
+batch_size_high: 128
+batch_size_low: 1024            
+scheduler_ft: "cosine"          # 'plateau' (heads) or 'cosine'
+warmup_ratio: 0.1               # warmup ratio for cosine scheduler
+high_fid_train_ratio: 0.70      # 70% for training
+high_fid_val_ratio: 0.15        # 15% for validation  
+high_fid_test_ratio: 0.15       # 15% for test (should sum to 1.0)
+head_weight_decay: 0.0001
+backbone_weight_decay: 0.01
+plateau_patience: 2
+min_lr: 0.000002
+unfreeze_final_norm: true
+high_fid_path: # path to the full-wave dataset (CSV) used for fine-tuning
+low_fid_path: # path to the semi-analytical dataset (CSV) used for fine-tuning
+lf_split_indices_path: # path to data_splits.npz produce by a prior semianalytical forward-model training run

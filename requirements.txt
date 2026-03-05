@@ -1,0 +1,12 @@
+torch
+numpy
+pandas
+tqdm
+PyYAML
+scipy
+matplotlib
+seaborn
+causal-conv1d
+mamba-ssm==2.2.2
+triton
+colorama==0.4.4

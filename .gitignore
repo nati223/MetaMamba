@@ -1,0 +1,9 @@
+*_pycache_*
+*.pyc
+*_init_.py*
+wandb*
+*.csv
+*.log
+*.tex
+*.pdf
+.vscode/
