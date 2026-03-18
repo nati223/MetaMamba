@@ -1,10 +1,15 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Dataset on HuggingFace](https://img.shields.io/badge/🤗%20Dataset-MetaMamba-blue)](https://huggingface.co/datasets/nati-nissan/MetaMamba)
+
 # Harnessing Selective State Space Models to Enhance Semianalytical Design of Fabrication-Ready Multilayered Huygens' Metasurfaces
 
 A data-driven design system for metamaterial surfaces. Given a target electromagnetic response (e.g, transmission magnitude and phase), MetaMamba generates the unit-cell geometry that realizes it — and vice versa.
 
 This repository is the codebase accompanying the following articles:
-- Part II: *Harnessing Selective State Space Models to Enhance Semianalytical Design of Fabrication-Ready Multilayered Huygens' Metasurfaces: Part II - Generative Inverse Design (MetaMamba)* — https://arxiv.org/abs/2603.03877
-- Part I: *Harnessing Selective State Space Models to Enhance Semianalytical Design of Fabrication-Ready Multilayered Huygens' Metasurfaces: Part I - Field-based Semianalytical Synthesis* — https://arxiv.org/abs/2603.03837
+- Part I: *Harnessing Selective State Space Models to Enhance Semianalytical Design of Fabrication-Ready Multilayered Huygens' Metasurfaces: Part I - Field-based Semianalytical Synthesis* 
+[![arXiv](https://img.shields.io/badge/arXiv-2603.03837-b31b1b.svg)](https://arxiv.org/abs/2603.03837)
+- Part II: *Harnessing Selective State Space Models to Enhance Semianalytical Design of Fabrication-Ready Multilayered Huygens' Metasurfaces: Part II - Generative Inverse Design (MetaMamba)*
+[![arXiv](https://img.shields.io/badge/arXiv-2603.03877-b31b1b.svg)](https://arxiv.org/abs/2603.03877)
 
 > **Citations (arXiv / BibTeX)**
 
@@ -60,6 +65,20 @@ Both share a Mamba2 SSM backbone.
 The semi-analytical model used to generate $\mathcal{D}_{SA}$ is developed in Part I and implemented as the LAYERS MATLAB app (`LAYERS/layers_App.mlapp`). See `LAYERS/layersProgram.pptx` for interactive usage.
 
 ---
+
+## Dataset
+
+The raw datasets used across all pipeline stages are publicly available on Hugging Face:
+
+👉 **[nati-nissan/MetaMamba](https://huggingface.co/datasets/nati-nissan/MetaMamba)**
+
+| File | Description |
+|------|-------------|
+| `sa_dataset_20ghz.csv` | ~524K SA-generated single-frequency samples |
+| `cst_dataset_20ghz.csv` | 1,080 full-wave CST samples at 20 GHz |
+| `sa_freq_resp_18_to_22.csv` | ~65K SA broadband frequency responses |
+| `cst_freq_resp_18_to_22.csv` | 1,080 CST broadband frequency responses |
+
 
 ## Installation
 
@@ -167,8 +186,11 @@ Outputs to `runs_dir/inverse_<timestamp>/`:
 - `best_model.pth`
 - `training_metrics.csv`, `training.log`
 
+
+### Stage (iii) — Candidate selection for CST with K-Means$
+
 ---
-### Parametric scan
+#### Parametric scan
 
 Before selecting candidates, run a full grid sweep over (|T|², φ) target space. For each target point the inverse model generates W sequences (greedy + top-k sampling); each sequence is then passed through the forward surrogate to obtain the predicted realized response. Results are saved to a CSV and a polar plot.
 
@@ -179,12 +201,12 @@ python evaluations/evaluate_scan.py \
     --output_csv scan_results.csv \
     --t_square_start 0.81 --t_square_stop 1.0 --t_square_step 0.01 \
     --phi_start 0 --phi_stop 360 --phi_step 2 \
-    --top_k_value 20 --num_top_k_samples 512 --disable_top_p_sampling
+    --top_k_value 20 --num_top_k_samples 1024 --disable_top_p_sampling
 ```
 
 ---
 
-### Candidate selection for CST with K-Means
+#### Candidate selection for CST with K-Means
 
 After the scan, select diverse candidates from the generated pool for CST simulation.
 
@@ -194,20 +216,14 @@ After the scan, select diverse candidates from the generated pool for CST simula
 python evaluations/select_candidates_for_calibration.py \
     --input-csv <scan.csv> \
     --output-csv candidates.csv \
-    --n-phase-bins 36 --n-clusters 5 \
+    --n-phase-bins 72 --n-clusters 15 \
     --emit-cst-txt
 ```
 ---
 
-### Stage (iii) — Collect the high-fidelity CST dataset $\mathcal{D}_{FW}$
+#### CST Simulation
 
-Run full-wave CST simulations for a set of W configurations. Parse results into the same CSV schema:
-
-```bash
-python data/parse_cst.py
-```
-
-The candidate W values for this step are drawn from the scan and selection steps above.
+Run full-wave CST simulations for a set of W configurations. Parse results into the same CSV structure as previous datasets.
 
 ---
 
